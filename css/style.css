@@ -1,7 +1,6 @@
-body {
-    margin-left: 20rem;
+.container {
+    margin: auto;
     margin-top: 2rem;
-    margin-right: 20rem;
 }
 
 header {
@@ -25,7 +24,7 @@ label {
 }
 
 .bi-x {
-    font-size: 1.3rem;
+    font-size: 1.3wwrem;
 }
 
 .clear-btn {
@@ -33,3 +32,10 @@ label {
     width: 100%;
     margin: auto;
 }
+
+
+.edie-text {
+    color: rgb(180, 177, 175);
+}
+
+
