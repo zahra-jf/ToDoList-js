@@ -5,6 +5,7 @@ const mainUl = document.getElementById("main-ul");
 const clearAll = document.getElementById("clear-all");
 const formFilter = document.getElementById("form-filter");
 const editBtn = ItemForm.querySelector("button");
+let isEditMode = false;
 
 
 // evevts
@@ -32,12 +33,25 @@ function displayItem() {
 function addLi(e) {
   e.preventDefault();
   const itemValue = listInput.value;
-
   if (itemValue == "") {
     textInvalid.innerText = "Please put an item !";
     return;
   } else {
     textInvalid.innerText = "";
+  }
+  if (isEditMode) {
+    const itemToEdit = mainUl.querySelector(".edit-text")
+    removeItem(itemToEdit);
+    editBtn.classList.replace("btn-primary", "btn-secondary");
+    editBtn.innerHTML = "+ add Item";
+    isEditMode = false;
+  }else{
+    if (checkRepetitiousItem(itemValue)) {
+      textInvalid.innerText = "That item already exists!";
+      return;
+    } else {
+      textInvalid.innerText = "";
+    }
   }
   let newLi = createLi(itemValue);
 
@@ -50,117 +64,107 @@ function addLi(e) {
   checkUI();
 }
 
-function createLi(itemValue) {
-  let newLi = document.createElement("li");
-  newLi.className =
-    "items list-group-item list-group-item-secondary d-flex justify-content-between align-items-center";
-  newLi.innerText = itemValue;
-
-  // newLi.onclick = function () {
-  //   editItem(this);
-  // };
-  mainUl.appendChild(newLi);
-  return newLi;
-}
-
-function addIcon(newLi) {
-  let iconX = document.createElement("i");
-  iconX.className = "icon-item bi bi-x ";
-  newLi.appendChild(iconX);
-}
-
-function onClick(e) {
-  if (e.target.classList.contains("bi-x")) {
-    removeItem(e.target.parentElement);
-  } else {
-    edieItem(e.target);
-  } 
-}
-
-function removeItem(item) {
- item.remove();
- removeItemFromstorag(item.textContent);
- checkUI();  
-}
-
-function edieItem(item) {
-   mainUl.querySelectorAll("li").forEach((item) => item.classList.remove("edie-text"));
-   listInput.value =item.textContent;
-   item.classList.add("edie-text");
-   editBtn.classList.replace("btn-secondary", "btn-primary");
-   editBtn.innerHTML = "<i class='bi bi-pencil-fill'></i> Update Item"; 
-}
-
-function clearFunction() {
-  mainUl.innerHTML = "";
-  checkUI();
-  localStorage.removeItem("items");
-}
-
-function checkUI() {
-  const items = mainUl.querySelectorAll("li");
-  if (items.length === 0) {
-    clearAll.style.display = "none";
-    formFilter.style.display = "none";
-  } else {
-    clearAll.style.display = "block";
-    formFilter.style.display = "block";
+function checkRepetitiousItem(item) {
+  const itemFromStorage = getItemStorage();
+    return itemFromStorage.includes(item)
   }
-}
 
-function filterFunction(e) {
-  const filterText = e.target.value.toLowerCase();
-  const getli = mainUl.querySelectorAll("li");
 
-  getli.forEach(function (item) {
-    const itemName = item.firstChild.textContent.toLowerCase();
-    if (itemName.indexOf(filterText) === 0) {
-     // change with replace
-      item.classList.add("d-flex");
-      item.classList.remove("d-none");
+  function createLi(itemValue) {
+    let newLi = document.createElement("li");
+    newLi.className =
+      "items list-group-item list-group-item-secondary d-flex justify-content-between align-items-center";
+    newLi.innerText = itemValue;
+
+    // newLi.onclick = function () {
+    //   editItem(this);
+    // };
+    mainUl.appendChild(newLi);
+    return newLi;
+  }
+
+  function addIcon(newLi) {
+    let iconX = document.createElement("i");
+    iconX.className = "icon-item bi bi-x ";
+    newLi.appendChild(iconX);
+  }
+
+  function onClick(e) {
+    if (e.target.classList.contains("bi-x")) {
+      removeItem(e.target.parentElement);
     } else {
-      item.classList.add("d-none");
-      item.classList.remove("d-flex");
+      editItem(e.target);
     }
-  });
-}
+  }
 
-function addToStorage(item) {
+  function removeItem(item) {
+    item.remove();
+    removeItemFromstorag(item.textContent);
+    checkUI();
+  }
+
+  function editItem(item) {
+    isEditMode = true;
+    mainUl.querySelectorAll("li").forEach((item) => item.classList.remove("edit-text"));
+    listInput.value = item.textContent;
+    item.classList.add("edit-text");
+    editBtn.classList.replace("btn-secondary", "btn-primary");
+    editBtn.innerHTML = "<i class='bi bi-pencil-fill'></i> Update Item";
+  }
+
+  function clearFunction() {
+    mainUl.innerHTML = "";
+    checkUI();
+    localStorage.removeItem("items");
+  }
+
+  function checkUI() {
+    const items = mainUl.querySelectorAll("li");
+    if (items.length === 0) {
+      clearAll.style.display = "none";
+      formFilter.style.display = "none";
+    } else {
+      clearAll.style.display = "block";
+      formFilter.style.display = "block";
+    }
+  }
+
+  function filterFunction(e) {
+    const filterText = e.target.value.toLowerCase();
+    const getli = mainUl.querySelectorAll("li");
+
+    getli.forEach(function (item) {
+      const itemName = item.firstChild.textContent.toLowerCase();
+      if (itemName.indexOf(filterText) === 0) {
+        // change with replace
+        item.classList.add("d-flex");
+        item.classList.remove("d-none");
+      } else {
+        item.classList.add("d-none");
+        item.classList.remove("d-flex");
+      }
+    });
+  }
+
+  function addToStorage(item) {
+    let itemFromStorage = getItemStorage();
+    itemFromStorage.push(item);
+    localStorage.setItem("items", JSON.stringify(itemFromStorage));
+  }
+
+function getItemStorage() {
   let itemFromStorage = [];
   if (localStorage.getItem("items") !== null) {
     itemFromStorage = JSON.parse(localStorage.getItem("items"));
   }
-  itemFromStorage.push(item);
-  localStorage.setItem("items", JSON.stringify(itemFromStorage));
+  return itemFromStorage;
 }
 
-function removeItemFromstorag(item) {
-  let itemFromStorage = [];
-  if (localStorage.getItem("items") !== null) {
-    itemFromStorage = JSON.parse(localStorage.getItem("items"));
+  function removeItemFromstorag(item) {
+    let itemFromStorage = [];
+    if (localStorage.getItem("items") !== null) {
+      itemFromStorage = JSON.parse(localStorage.getItem("items"));
+    }
+    itemFromStorage = itemFromStorage.filter((i) => i !== item);
+    localStorage.setItem("items", JSON.stringify(itemFromStorage));
   }
-  itemFromStorage = itemFromStorage.filter((i) => i !== item);
-  localStorage.setItem("items", JSON.stringify(itemFromStorage));
-}
-
-
-
-
-
-// let addBtn = document.getElementById("addBtn");
-// addBtn.addEventListener("click", addLi);
-
-// function addLi() {
-//   let addLi = document.createElement("li");
-//   addLi.classList.add(
-//     "items list-group-item list-group-item-secondary d-flex justify-content-between align-items-center"
-//   );
-//   addLi.innerText = inputValue;
-//   let mainUl = document.getElementById("main-ul");
-//   mainUl.appendChild(addLi);
-
-//   if ((inputValue = "")) {
-//     let textInvalid = document.getElementById("text-invalid");
-//     textInvalid.innerText = "error";
-//   }
-// }
