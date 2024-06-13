@@ -24,8 +24,13 @@ label {
 }
 
 .bi-x {
-    font-size: 1.3wwrem;
+    font-size: 1.3rem;
     color: rgb(246, 66, 66);
+}
+
+.bi-check {
+    font-size: 1.3rem;
+    color: rgb(42, 205, 115);
 }
 
 .clear-btn {
@@ -40,3 +45,12 @@ label {
 }
 
 
+
+.hoverMode:hover{
+  text-shadow: 1px 1px 2px rgb(160, 159, 159);
+  /* cursor:cell; */
+}
+
+.line-on-text {
+text-decoration-line: line-through;
+}
