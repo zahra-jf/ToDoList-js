@@ -6,6 +6,8 @@ const clearAll = document.getElementById("clear-all");
 const formFilter = document.getElementById("form-filter");
 const editBtn = ItemForm.querySelector("button");
 let isEditMode = false;
+let myBar = document.getElementById("myBar");
+let textPercent = document.getElementById("percent-text");
 
 // evevts
 document.addEventListener("DOMContentLoaded", displayItem);
@@ -17,15 +19,13 @@ formFilter.addEventListener("input", filterFunction);
 checkUI();
 
 function displayItem() {
-  let itemFromStorage = [];
-  if (localStorage.getItem("items") !== null) {
-    itemFromStorage = JSON.parse(localStorage.getItem("items"));
-  }
+  let itemFromStorage = getItemStorage();
   itemFromStorage.forEach(function (item) {
-    let newLi = createLi(item);
+    let newLi = createLi(item.value, item.completed);
     addIcon(newLi);
   });
   checkUI();
+  percentOfCompeletedTask();
 }
 
 function addLi(e) {
@@ -41,12 +41,12 @@ function addLi(e) {
     const itemToEdit = mainUl.querySelector(".edit-text");
     removeItem(itemToEdit);
     editBtn.classList.replace("btn-primary", "btn-secondary");
-    editBtn.innerHTML = "+ add Item";
+    editBtn.innerHTML = "+ Add";
 
     isEditMode = false;
   } else {
     if (checkRepetitiousItem(itemValue)) {
-      textInvalid.innerText = "That item already exists!";
+      textInvalid.innerText = "That task already exists!";
       return;
     } else {
       textInvalid.innerText = "";
@@ -63,34 +63,40 @@ function addLi(e) {
   checkUI();
 }
 
-function checkRepetitiousItem(item) {
-  const itemFromStorage = getItemStorage();
-  return itemFromStorage.includes(item);
+function checkRepetitiousItem(searchableValue) {
+  let itemsFromStorage = getItemStorage();
+  let flag = false;
+  itemsFromStorage.forEach(function (item) {
+    let result = item.value.includes(searchableValue);
+    if (result) {
+      flag= true;
+    }
+  });
+  return flag;
 }
 
-function createLi(itemValue) {
+function createLi(itemValue, completed = false) {
   let newLi = document.createElement("li");
   newLi.className =
-    "items list-group-item list-group-item-secondary d-flex justify-content-between  align-items-center ";
-
+    "items list-group-item  d-flex justify-content-between  align-items-center ";
   mainUl.appendChild(newLi);
-  let textDiv = document.createElement("div");
 
+  let textDiv = document.createElement("div");
   newLi.appendChild(textDiv);
   textDiv.innerText = itemValue;
   textDiv.className = "hoverMode";
-
+  if (completed) {
+    textDiv.classList.add("line-on-text");
+  }
   return newLi;
 }
 
 function addIcon(newLi) {
   let iconX = document.createElement("i");
   iconX.className = "icon-item bi bi-x ";
-  newLi.appendChild(iconX);
 
   let iconCheck = document.createElement("i");
   iconCheck.className = "bi bi-check";
-  newLi.appendChild(iconCheck);
 
   let iconDiv = document.createElement("div");
   newLi.appendChild(iconDiv);
@@ -100,14 +106,47 @@ function addIcon(newLi) {
 }
 
 function onClick(e) {
-  if (e.target.classList.contains("bi-x")) {
-    removeItem(e.target.parentElement.parentElement);
-  } else if (e.target.classList.contains("bi-check")) {
-    let div = e.target.parentElement.parentElement.firstChild;
-    div.classList.add("line-on-text");
+  let selectedLi = e.target;
+  if (selectedLi.classList.contains("bi-x")) {
+    removeItem(selectedLi.parentElement.parentElement);
+    percentOfCompeletedTask();
+  } else if (selectedLi.classList.contains("bi-check")) {
+    completeTask(selectedLi.parentElement.parentElement.firstChild);
   } else {
-    editItem(e.target);
+    editItem(selectedLi.parentElement);
   }
+}
+
+function completeTask(textDiv) {
+  textDiv.classList.toggle("line-on-text");
+  percentOfCompeletedTask();
+
+  let text = textDiv.textContent;
+  let items = getItemStorage();
+  items.forEach(function (item) {
+    if (text === item.value) {
+      let completed = false;
+      if (textDiv.classList.contains("line-on-text")) {
+        completed = true;
+      }
+      removeItemFromstorag(item.value);
+      addToStorage(item.value, completed);
+    }
+  });
+}
+
+function percentOfCompeletedTask() {
+  let totalTasks = mainUl.querySelectorAll("li").length;
+  let completedes = mainUl.querySelectorAll("li .line-on-text").length;
+  let percent = (completedes / totalTasks) * 100;
+  let width = 0 + "%";
+   percentText = 0+ "%";
+  if (totalTasks) {
+    width = percent + "%";
+    percentText = Math.round(percent) + "%";
+  }
+  myBar.style.width = width;
+  textPercent.innerText = percentText;
 }
 
 function removeItem(item) {
@@ -124,13 +163,17 @@ function editItem(item) {
   listInput.value = item.textContent;
   item.classList.add("edit-text");
   editBtn.classList.replace("btn-secondary", "btn-primary");
-  editBtn.innerHTML = "<i class='bi bi-pencil-fill'></i> Update Item";
+  editBtn.innerHTML = "<i class='bi bi-pencil-fill'></i> Update task";
 }
 
 function clearFunction() {
   mainUl.innerHTML = "";
   checkUI();
   localStorage.removeItem("items");
+  editBtn.classList.replace("btn-primary", "btn-secondary");
+  editBtn.innerHTML = "+ add ";
+  isEditMode = false;
+  percentOfCompeletedTask();
 }
 
 function checkUI() {
@@ -161,9 +204,10 @@ function filterFunction(e) {
   });
 }
 
-function addToStorage(item) {
+function addToStorage(item, completeStatus = false) {
   let itemFromStorage = getItemStorage();
-  itemFromStorage.push(item);
+  let inputValue = { value: item, completed: completeStatus };
+  itemFromStorage.push(inputValue);
   localStorage.setItem("items", JSON.stringify(itemFromStorage));
 }
 
@@ -175,11 +219,24 @@ function getItemStorage() {
   return itemFromStorage;
 }
 
-function removeItemFromstorag(item) {
+function removeItemFromstorag(value) {
   let itemFromStorage = [];
   if (localStorage.getItem("items") !== null) {
     itemFromStorage = JSON.parse(localStorage.getItem("items"));
   }
-  itemFromStorage = itemFromStorage.filter((i) => i !== item);
+  itemFromStorage = itemFromStorage.filter((i) => i.value !== value);
   localStorage.setItem("items", JSON.stringify(itemFromStorage));
+}
+
+var progress_bar = document.querySelectorAll(".myProgress");
+function progress() {
+  var checked_progress = document.querySelectorAll(".line-on-text");
+  var length = checked_progress.length;
+  progress_bar.forEach(function (index) {
+    index.classList.remove("active");
+  });
+
+  for (i = 0; i < length; i++) {
+    progress_bar[i].classList.add("active");
+  }
 }
