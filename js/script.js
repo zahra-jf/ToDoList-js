@@ -8,27 +8,40 @@ const editBtn = ItemForm.querySelector("button");
 let isEditMode = false;
 let myBar = document.getElementById("myBar");
 let textPercent = document.getElementById("percent-text");
+let progress_bar = document.querySelectorAll(".myProgress");
 
 // evevts
-document.addEventListener("DOMContentLoaded", displayItem);
-ItemForm.addEventListener("submit", addLi);
-mainUl.addEventListener("click", onClick);
+document.addEventListener("DOMContentLoaded", onDocumentLoad);
+ItemForm.addEventListener("submit", submit);
+// mainUl.addEventListener("click", onClick);
 clearAll.addEventListener("click", clearFunction);
 formFilter.addEventListener("input", filterFunction);
 
 checkUI();
 
-function displayItem() {
+function makeId(length) {
+  let result = "";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter += 1;
+  }
+  return result;
+}
+
+function onDocumentLoad() {
   let itemFromStorage = getItemStorage();
   itemFromStorage.forEach(function (item) {
-    let newLi = createLi(item.value, item.completed);
-    addIcon(newLi);
+    createLi(item.value, item.completed);
   });
   checkUI();
   percentOfCompeletedTask();
 }
 
-function addLi(e) {
+function submit(e) {
   e.preventDefault();
   const itemValue = listInput.value;
   if (itemValue == "") {
@@ -39,10 +52,9 @@ function addLi(e) {
   }
   if (isEditMode) {
     const itemToEdit = mainUl.querySelector(".edit-text");
-    removeItem(itemToEdit);
+    removeItem(itemToEdit.parentElement.parentElement);
     editBtn.classList.replace("btn-primary", "btn-secondary");
     editBtn.innerHTML = "+ Add";
-
     isEditMode = false;
   } else {
     if (checkRepetitiousItem(itemValue)) {
@@ -52,9 +64,7 @@ function addLi(e) {
       textInvalid.innerText = "";
     }
   }
-  let newLi = createLi(itemValue);
-
-  addIcon(newLi);
+  createLi(itemValue);
 
   listInput.value = "";
 
@@ -67,70 +77,129 @@ function checkRepetitiousItem(searchableValue) {
   let itemsFromStorage = getItemStorage();
   let flag = false;
   itemsFromStorage.forEach(function (item) {
-    let result = item.value.includes(searchableValue);
-    if (result) {
-      flag= true;
+    if (item.value === searchableValue) {
+      flag = true;
     }
   });
   return flag;
 }
 
 function createLi(itemValue, completed = false) {
+  let id = makeId(5);
+  let newLi = createNewLi();
+  let leftDiv = createLeftDiv();
+  let iconCheck = createIconCheck(id);
+  iconCheck.addEventListener("click", function () {
+    completeTask(id);
+  });
+
+  let textDiv = createTextDiv(id, itemValue, completed);
+  leftDiv.appendChild(iconCheck);
+  leftDiv.appendChild(textDiv);
+  textDiv.addEventListener("click", function () {
+    editItem(id);
+  });
+
+  let iconX = createDeleteIcon(id);
+  iconX.addEventListener("click", function () {
+    deleteTask(id);
+  });
+
+  newLi.appendChild(leftDiv);
+  newLi.appendChild(iconX);
+  mainUl.appendChild(newLi);
+}
+
+function createNewLi() {
   let newLi = document.createElement("li");
   newLi.className =
-    "items list-group-item  d-flex justify-content-between  align-items-center ";
-  mainUl.appendChild(newLi);
-
-  let textDiv = document.createElement("div");
-  newLi.appendChild(textDiv);
-  textDiv.innerText = itemValue;
-  textDiv.className = "hoverMode";
-  if (completed) {
-    textDiv.classList.add("line-on-text");
-  }
+    "items list-group-item  d-flex  justify-content-between  align-items-center ";
   return newLi;
 }
 
-function addIcon(newLi) {
-  let iconX = document.createElement("i");
-  iconX.className = "icon-item bi bi-x ";
+function createLeftDiv() {
+  let leftDiv = document.createElement("div");
+  leftDiv.className =
+    "d-flex flex-row align-items-center justify-content-center ";
+  return leftDiv;
+}
 
+function createIconCheck(id) {
   let iconCheck = document.createElement("i");
-  iconCheck.className = "bi bi-check";
-
-  let iconDiv = document.createElement("div");
-  newLi.appendChild(iconDiv);
-
-  iconDiv.appendChild(iconX);
-  iconDiv.appendChild(iconCheck);
+  iconCheck.className = "bi bi-square";
+  iconCheck.id = "check-" + id;
+  return iconCheck;
 }
 
-function onClick(e) {
-  let selectedLi = e.target;
-  if (selectedLi.classList.contains("bi-x")) {
-    removeItem(selectedLi.parentElement.parentElement);
-    percentOfCompeletedTask();
-  } else if (selectedLi.classList.contains("bi-check")) {
-    completeTask(selectedLi.parentElement.parentElement.firstChild);
-  } else {
-    editItem(selectedLi.parentElement);
+function createTextDiv(id, itemValue, completed) {
+  let textDiv = document.createElement("div");
+  textDiv.innerText = itemValue;
+  textDiv.className = "hoverMode mx-2 task-test";
+  textDiv.id = "text-" + id;
+  if (completed) {
+    textDiv.classList.add("line-on-text");
   }
+  return textDiv;
 }
 
-function completeTask(textDiv) {
+function createDeleteIcon(id) {
+  let iconX = document.createElement("i");
+  iconX.className = "icon-item bi bi-trash3";
+  iconX.id = "delete-" + id;
+  return iconX;
+}
+
+// function  onClick(e) {
+//   let selectedLi = e.target;
+//   if (selectedLi.classList.contains("bi-x")) {
+//     removeItem(selectedLi.parentElement.parentElement);
+//     percentOfCompeletedTask();
+//   } else {
+//     editItem(selectedLi.parentElement);
+//   }
+// }
+
+function editItem(id) {
+  isEditMode = true;
+  mainUl
+    .querySelectorAll(".task-test")
+    .forEach((item) => item.classList.remove("edit-text"));
+  // item.classList.add("edit-text");
+  let thisText = document.getElementById("text-" + id);
+  thisText.classList.add("edit-text");
+  listInput.value = thisText.textContent;
+  editBtn.classList.replace("btn-secondary", "btn-primary");
+  editBtn.innerHTML = "<i class='bi bi-pencil-fill'></i> Update task";
+}
+
+function deleteTask(id) {
+  let thisLi = document.getElementById("delete-" + id);
+  removeItem(thisLi.parentElement);
+  percentOfCompeletedTask();
+}
+
+function completeTask(id) {
+  let textDiv = document.getElementById("text-" + id);
+  let text = textDiv.textContent;
   textDiv.classList.toggle("line-on-text");
   percentOfCompeletedTask();
-
-  let text = textDiv.textContent;
   let items = getItemStorage();
+
+  let thisCheck = document.getElementById("check-" + id);
+  let completedTask = thisCheck.classList.contains("bi-square");
+  if (completedTask) {
+    thisCheck.classList.remove("bi-square");
+    thisCheck.classList.add("bi-check-square");
+  } else {
+    thisCheck.classList.remove("bi-check-square");
+    thisCheck.classList.add("bi-square");
+  }
+
   items.forEach(function (item) {
     if (text === item.value) {
-      let completed = false;
-      if (textDiv.classList.contains("line-on-text")) {
-        completed = true;
-      }
+      let newCompleted = !item.completed;
       removeItemFromstorag(item.value);
-      addToStorage(item.value, completed);
+      addToStorage(item.value, newCompleted);
     }
   });
 }
@@ -140,7 +209,7 @@ function percentOfCompeletedTask() {
   let completedes = mainUl.querySelectorAll("li .line-on-text").length;
   let percent = (completedes / totalTasks) * 100;
   let width = 0 + "%";
-   percentText = 0+ "%";
+  percentText = 0 + "%";
   if (totalTasks) {
     width = percent + "%";
     percentText = Math.round(percent) + "%";
@@ -153,17 +222,6 @@ function removeItem(item) {
   item.remove();
   removeItemFromstorag(item.textContent);
   checkUI();
-}
-
-function editItem(item) {
-  isEditMode = true;
-  mainUl
-    .querySelectorAll("li")
-    .forEach((item) => item.classList.remove("edit-text"));
-  listInput.value = item.textContent;
-  item.classList.add("edit-text");
-  editBtn.classList.replace("btn-secondary", "btn-primary");
-  editBtn.innerHTML = "<i class='bi bi-pencil-fill'></i> Update task";
 }
 
 function clearFunction() {
@@ -193,7 +251,7 @@ function filterFunction(e) {
 
   getli.forEach(function (item) {
     const itemName = item.firstChild.textContent.toLowerCase();
-    if (itemName.indexOf(filterText) === 0) {
+    if (itemName.idOf(filterText) === 0) {
       // change with replace
       item.classList.add("d-flex");
       item.classList.remove("d-none");
@@ -228,12 +286,11 @@ function removeItemFromstorag(value) {
   localStorage.setItem("items", JSON.stringify(itemFromStorage));
 }
 
-var progress_bar = document.querySelectorAll(".myProgress");
 function progress() {
   var checked_progress = document.querySelectorAll(".line-on-text");
   var length = checked_progress.length;
-  progress_bar.forEach(function (index) {
-    index.classList.remove("active");
+  progress_bar.forEach(function (id) {
+    id.classList.remove("active");
   });
 
   for (i = 0; i < length; i++) {
