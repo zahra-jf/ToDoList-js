@@ -92,7 +92,6 @@ function createLi(itemValue, completed = false) {
   iconCheck.addEventListener("click", function () {
     completeTask(id);
   });
-
   let textDiv = createTextDiv(id, itemValue, completed);
   leftDiv.appendChild(iconCheck);
   leftDiv.appendChild(textDiv);
@@ -108,6 +107,7 @@ function createLi(itemValue, completed = false) {
   newLi.appendChild(leftDiv);
   newLi.appendChild(iconX);
   mainUl.appendChild(newLi);
+  checkMarkToggle(id, completed);
 }
 
 function createNewLi() {
@@ -149,22 +149,11 @@ function createDeleteIcon(id) {
   return iconX;
 }
 
-// function  onClick(e) {
-//   let selectedLi = e.target;
-//   if (selectedLi.classList.contains("bi-x")) {
-//     removeItem(selectedLi.parentElement.parentElement);
-//     percentOfCompeletedTask();
-//   } else {
-//     editItem(selectedLi.parentElement);
-//   }
-// }
-
 function editItem(id) {
   isEditMode = true;
   mainUl
     .querySelectorAll(".task-test")
     .forEach((item) => item.classList.remove("edit-text"));
-  // item.classList.add("edit-text");
   let thisText = document.getElementById("text-" + id);
   thisText.classList.add("edit-text");
   listInput.value = thisText.textContent;
@@ -183,25 +172,28 @@ function completeTask(id) {
   let text = textDiv.textContent;
   textDiv.classList.toggle("line-on-text");
   percentOfCompeletedTask();
-  let items = getItemStorage();
 
+  let items = getItemStorage();
+  let newCompleted = false;
+  items.forEach(function (item) {
+    if (text === item.value) {
+      newCompleted = !item.completed;
+      removeItemFromstorag(item.value);
+      addToStorage(item.value, newCompleted);
+    }
+  });
+  checkMarkToggle(id, newCompleted);
+}
+
+function checkMarkToggle(id, newCompleted) {
   let thisCheck = document.getElementById("check-" + id);
-  let completedTask = thisCheck.classList.contains("bi-square");
-  if (completedTask) {
+  if (newCompleted) {
     thisCheck.classList.remove("bi-square");
     thisCheck.classList.add("bi-check-square");
   } else {
     thisCheck.classList.remove("bi-check-square");
     thisCheck.classList.add("bi-square");
   }
-
-  items.forEach(function (item) {
-    if (text === item.value) {
-      let newCompleted = !item.completed;
-      removeItemFromstorag(item.value);
-      addToStorage(item.value, newCompleted);
-    }
-  });
 }
 
 function percentOfCompeletedTask() {
@@ -248,16 +240,12 @@ function checkUI() {
 function filterFunction(e) {
   const filterText = e.target.value.toLowerCase();
   const getli = mainUl.querySelectorAll("li");
-
   getli.forEach(function (item) {
     const itemName = item.firstChild.textContent.toLowerCase();
-    if (itemName.idOf(filterText) === 0) {
-      // change with replace
-      item.classList.add("d-flex");
-      item.classList.remove("d-none");
+    if (itemName.indexOf(filterText) === 0) {
+      item.classList.replace("d-none", "d-flex");
     } else {
-      item.classList.add("d-none");
-      item.classList.remove("d-flex");
+      item.classList.replace("d-flex", "d-none");
     }
   });
 }
