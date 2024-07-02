@@ -13,7 +13,6 @@ let progress_bar = document.querySelectorAll(".myProgress");
 // evevts
 document.addEventListener("DOMContentLoaded", onDocumentLoad);
 ItemForm.addEventListener("submit", submit);
-// mainUl.addEventListener("click", onClick);
 clearAll.addEventListener("click", clearFunction);
 formFilter.addEventListener("input", filterFunction);
 
@@ -159,6 +158,7 @@ function editItem(id) {
   listInput.value = thisText.textContent;
   editBtn.classList.replace("btn-secondary", "btn-primary");
   editBtn.innerHTML = "<i class='bi bi-pencil-fill'></i> Update task";
+  
 }
 
 function deleteTask(id) {
@@ -217,14 +217,23 @@ function removeItem(item) {
 }
 
 function clearFunction() {
-  mainUl.innerHTML = "";
-  checkUI();
-  localStorage.removeItem("items");
-  editBtn.classList.replace("btn-primary", "btn-secondary");
-  editBtn.innerHTML = "+ add ";
-  isEditMode = false;
+ let confirmText = "Do you want all items to be deleted?";
+  if (confirm(confirmText) == true) {
+    confirmText = "You pressed OK!";
+    mainUl.innerHTML = "";
+    checkUI();
+    localStorage.removeItem("items");
+    editBtn.classList.replace("btn-primary", "btn-secondary");
+    editBtn.innerHTML = "+ add ";
+    isEditMode = false;
+    
+
+  } else {
+    confirmText = "You canceled!";
+  }
   percentOfCompeletedTask();
-}
+  }
+  
 
 function checkUI() {
   const items = mainUl.querySelectorAll("li");

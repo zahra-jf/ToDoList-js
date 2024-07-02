@@ -49,7 +49,10 @@
      font-size: 1.1rem;
  }
 
-
+.badge{
+    background-color: var(--clr-pink) !important;
+   
+}
 
  .bi-trash3 {
      font-size: 1.1rem;
@@ -90,14 +93,15 @@
  }
 
  .hoverMode:hover {
-     color: blueviolet;
-     /* cursor:cell; */
+     color:var(--clr-dark);
+     cursor:crosshair;
      transform: scale(1.06);
  }
 
  .line-on-text {
      text-decoration-line: line-through;
  }
+
 
  #myProgress {
      width: 100%;
